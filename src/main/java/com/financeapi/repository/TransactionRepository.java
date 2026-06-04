@@ -35,4 +35,14 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
           and (:year is null or extract(year from t.date) = :year)
     """, nativeQuery = true)
     BigDecimal totalExpenses(Long userId, Integer month, Integer year);
+
+    @Query(value = """
+        select coalesce(sum(t.amount), 0)
+        from transactions t
+        where t.user_id = :userId
+          and t.category_id = :categoryId
+          and extract(month from t.date) = :month
+          and extract(year from t.date) = :year
+    """, nativeQuery = true)
+    BigDecimal sumAmountByUserIdAndCategoryIdAndMonthAndYear(Long userId, Long categoryId, Integer month, Integer year);
 }

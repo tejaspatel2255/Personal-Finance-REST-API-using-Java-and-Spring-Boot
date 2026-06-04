@@ -29,16 +29,21 @@ public class BudgetService {
         if (category.getType() != CategoryType.EXPENSE) {
             throw new IllegalArgumentException("Budgets can only be set for expense categories");
         }
-        BigDecimal spent = transactionRepository.findByUserId(user.getId()).stream()
-                .filter(t -> t.getCategory().getId().equals(category.getId()))
-                .filter(t -> t.getDate().getMonthValue() == request.getMonth() && t.getDate().getYear() == request.getYear())
-                .map(t -> t.getAmount())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal spent = transactionRepository.sumAmountByUserIdAndCategoryIdAndMonthAndYear(user.getId(), category.getId(), request.getMonth(), request.getYear());
         Budget budget = budgetRepository.findByUserIdAndCategoryIdAndMonthAndYear(user.getId(), category.getId(), request.getMonth(), request.getYear())
                 .orElse(Budget.builder().user(user).category(category).month(request.getMonth()).year(request.getYear()).build());
         budget.setMonthlyLimit(request.getMonthlyLimit());
         budget.setSpent(spent);
         return toResponse(budgetRepository.save(budget));
+    }
+
+    public void recalculateBudgetSpent(Long userId, Long categoryId, int month, int year) {
+        budgetRepository.findByUserIdAndCategoryIdAndMonthAndYear(userId, categoryId, month, year)
+                .ifPresent(budget -> {
+                    BigDecimal spent = transactionRepository.sumAmountByUserIdAndCategoryIdAndMonthAndYear(userId, categoryId, month, year);
+                    budget.setSpent(spent);
+                    budgetRepository.save(budget);
+                });
     }
 
     public List<BudgetResponse> getCurrentMonthBudgets() {

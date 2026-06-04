@@ -1,0 +1,16 @@
+/target/
+/.maven/
+.project
+.classpath
+.settings/
+*.class
+*.jar
+*.war
+*.zip
+*.tar.gz
+*.rar
+*.log
+.DS_Store
+.idea/
+*.iml
+.vscode/
