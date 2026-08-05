@@ -886,7 +886,9 @@
             <!-- Action Bar -->
             <section class="action-bar">
                 <h2 class="section-title">Dashboard Overview</h2>
-                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="openModal('modal-goal')">
+                        <i class="fa-solid fa-piggy-bank"></i> Add Goal
+                    </button>
                     <button class="btn-secondary" onclick="exportTransactionsCSV()">
                         <i class="fa-solid fa-file-csv"></i> Export CSV
                     </button>
@@ -953,15 +955,31 @@
                     </div>
                 </div>
 
-                <!-- Right: Monthly Budgets -->
-                <div class="panel-card">
-                    <div class="panel-header">
-                        <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Budget Limits</h3>
+                <!-- Right Column: Monthly Budgets & Savings Goals -->
+                <div style="display: flex; flex-direction: column; gap: 24px;">
+                    <!-- Monthly Budgets -->
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Budget Limits</h3>
+                        </div>
+                        <div class="budget-list" id="budget-list-container">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-chart-line"></i>
+                                <p>No budget limits set. Click "Set Monthly Limit" to track spending limits.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="budget-list" id="budget-list-container">
-                        <div class="empty-state">
-                            <i class="fa-solid fa-chart-line"></i>
-                            <p>No budget limits set. Click "Set Monthly Limit" to track spending limits.</p>
+
+                    <!-- Savings Goals Tracker -->
+                    <div class="panel-card">
+                        <div class="panel-header">
+                            <h3 class="panel-title"><i class="fa-solid fa-piggy-bank"></i> Savings Goals</h3>
+                        </div>
+                        <div class="budget-list" id="goal-list-container">
+                            <div class="empty-state">
+                                <i class="fa-solid fa-bullseye"></i>
+                                <p>No active savings goals. Click "+ Add Goal" to set a target!</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1001,6 +1019,35 @@
                         </div>
                     </div>
                     <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Transaction</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Savings Goal Modal -->
+    <div class="modal-overlay" id="modal-goal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-piggy-bank" style="color: var(--primary);"></i> Add Savings Goal</h3>
+                <button class="modal-close" onclick="closeModal('modal-goal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="handleAddGoal(event)">
+                    <div class="form-group">
+                        <label for="goal-title">Goal Name</label>
+                        <input type="text" id="goal-title" class="select-input" required placeholder="e.g. Emergency Fund, New Laptop">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="goal-target">Target Amount ($)</label>
+                            <input type="number" step="0.01" min="1" id="goal-target" class="select-input" required placeholder="1000.00">
+                        </div>
+                        <div class="form-group">
+                            <label for="goal-current">Current Saved ($)</label>
+                            <input type="number" step="0.01" min="0" id="goal-current" class="select-input" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Create Goal</button>
                 </form>
             </div>
         </div>
@@ -1196,6 +1243,7 @@
             await loadCategories();
             const transactions = await loadTransactions();
             await loadBudgets();
+            await loadGoals();
             const summary = await loadSummary();
             renderCharts(transactions, summary);
         }
@@ -1605,6 +1653,84 @@
             } catch (err) {
                 showNotification(err.message, "error");
             }
+        }
+
+        async function loadGoals() {
+            try {
+                const stored = localStorage.getItem("apex_savings_goals");
+                const goals = stored ? JSON.parse(stored) : [
+                    { id: 1, title: "Emergency Fund", target: 5000, current: 3200 },
+                    { id: 2, title: "Vacation Fund", target: 1500, current: 850 }
+                ];
+                renderGoalsList(goals);
+                return goals;
+            } catch (err) {
+                renderGoalsList([]);
+            }
+        }
+
+        function renderGoalsList(goals) {
+            const container = document.getElementById("goal-list-container");
+            if (!goals || goals.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-bullseye"></i>
+                        <p>No active savings goals. Click "+ Add Goal" to set a target!</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            goals.forEach(g => {
+                const percent = Math.min(100, Math.round((g.current / g.target) * 100));
+                const item = document.createElement("div");
+                item.className = "budget-card";
+                item.innerHTML = `
+                    <div class="budget-head">
+                        <span class="budget-name"><i class="fa-solid fa-flag-checkered" style="color: var(--primary); margin-right: 6px;"></i> ${escapeHtml(g.title)}</span>
+                        <span class="budget-values">$${g.current.toFixed(2)} of $${g.target.toFixed(2)}</span>
+                    </div>
+                    <div class="progress-track">
+                        <div class="progress-fill" style="width: ${percent}%; background: var(--primary);"></div>
+                    </div>
+                    <div class="budget-foot">
+                        <span>${percent}% Reached</span>
+                        <button class="btn-delete" title="Delete Goal" onclick="deleteGoal(${g.id})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function handleAddGoal(e) {
+            e.preventDefault();
+            const title = document.getElementById("goal-title").value;
+            const target = parseFloat(document.getElementById("goal-target").value);
+            const current = parseFloat(document.getElementById("goal-current").value) || 0;
+
+            const stored = localStorage.getItem("apex_savings_goals");
+            const goals = stored ? JSON.parse(stored) : [];
+            goals.push({ id: Date.now(), title, target, current });
+            localStorage.setItem("apex_savings_goals", JSON.stringify(goals));
+
+            showNotification(`Savings Goal "${title}" created!`, "success");
+            document.getElementById("goal-title").value = "";
+            document.getElementById("goal-target").value = "";
+            document.getElementById("goal-current").value = "";
+            closeModal('modal-goal');
+            loadGoals();
+        }
+
+        function deleteGoal(id) {
+            const stored = localStorage.getItem("apex_savings_goals");
+            if (!stored) return;
+            let goals = JSON.parse(stored);
+            goals = goals.filter(g => g.id !== id);
+            localStorage.setItem("apex_savings_goals", JSON.stringify(goals));
+            showNotification("Savings Goal removed", "info");
+            loadGoals();
         }
 
         function escapeHtml(str) {
