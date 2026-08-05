@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class AuthService {
     private final UserRepository userRepository;
+    private final com.financeapi.repository.CategoryRepository categoryRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -33,8 +34,37 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .build();
         user = userRepository.save(user);
+        seedDefaultCategories(user);
         return new AuthResponse(jwtService.generateToken(user.getId(), user.getUsername()));
     }
+
+    private void seedDefaultCategories(User user) {
+        java.util.List<CategorySeed> defaults = java.util.List.of(
+            new CategorySeed("Salary", com.financeapi.model.CategoryType.INCOME),
+            new CategorySeed("Freelance / Business", com.financeapi.model.CategoryType.INCOME),
+            new CategorySeed("Investments", com.financeapi.model.CategoryType.INCOME),
+            new CategorySeed("Groceries & Food", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Rent & Housing", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Utilities & Bills", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Transportation & Fuel", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Dining Out & Entertainment", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Shopping & Lifestyle", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Healthcare & Medical", com.financeapi.model.CategoryType.EXPENSE),
+            new CategorySeed("Education & Learning", com.financeapi.model.CategoryType.EXPENSE)
+        );
+
+        for (CategorySeed seed : defaults) {
+            categoryRepository.save(
+                com.financeapi.model.Category.builder()
+                    .name(seed.name())
+                    .type(seed.type())
+                    .user(user)
+                    .build()
+            );
+        }
+    }
+
+    private record CategorySeed(String name, com.financeapi.model.CategoryType type) {}
 
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
