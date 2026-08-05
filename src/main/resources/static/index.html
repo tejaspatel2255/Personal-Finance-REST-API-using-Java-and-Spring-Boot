@@ -931,6 +931,20 @@
                         <h3 class="panel-title"><i class="fa-solid fa-receipt"></i> Recent Transactions</h3>
                         <span style="font-size: 0.85rem; color: var(--text-muted);" id="tx-count">0 items</span>
                     </div>
+
+                    <!-- Search & Filter Controls -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 6px;">
+                        <div class="input-wrapper" style="flex: 1;">
+                            <i class="fa-solid fa-magnifying-glass input-icon"></i>
+                            <input type="text" id="tx-search-input" class="form-input" placeholder="Search description..." oninput="filterTransactions()" style="padding-top: 8px; padding-bottom: 8px; font-size: 0.88rem;">
+                        </div>
+                        <select id="tx-type-filter" class="select-input" onchange="filterTransactions()" style="width: 140px; padding: 8px 12px; font-size: 0.88rem;">
+                            <option value="ALL">All Types</option>
+                            <option value="EXPENSE">Expenses</option>
+                            <option value="INCOME">Income</option>
+                        </select>
+                    </div>
+
                     <div class="transaction-list" id="transaction-list-container">
                         <div class="empty-state">
                             <i class="fa-solid fa-inbox"></i>
@@ -1218,67 +1232,84 @@
             }
         }
 
+        let allTransactions = [];
+
         async function loadTransactions() {
             try {
                 const res = await fetch(`${API_BASE}/transactions`, {
                     headers: { "Authorization": `Bearer ${token}` }
                 });
                 if (!res.ok) throw new Error("Could not load transactions");
-                const list = await res.json();
+                allTransactions = await res.json();
+                allTransactions.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
-                const container = document.getElementById("transaction-list-container");
-                document.getElementById("tx-count").innerText = `${list.length} item${list.length === 1 ? '' : 's'}`;
-
-                if (list.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="fa-solid fa-inbox"></i>
-                            <p>No transactions added yet. Click "+ Add Transaction" to begin!</p>
-                        </div>`;
-                    return;
-                }
-
-                container.innerHTML = "";
-                list.sort((a,b) => new Date(b.date) - new Date(a.date));
-                
-                list.forEach(tx => {
-                    const item = document.createElement("div");
-                    item.className = "transaction-item";
-                    
-                    const isIncome = tx.categoryType === "INCOME";
-                    const iconClass = isIncome ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
-                    
-                    item.innerHTML = `
-                        <div class="tx-info">
-                            <div class="tx-icon-box ${isIncome ? 'income' : 'expense'}">
-                                <i class="fa-solid ${iconClass}"></i>
-                            </div>
-                            <div class="tx-details">
-                                <span class="tx-desc">${escapeHtml(tx.description)}</span>
-                                <div class="tx-meta">
-                                    <span class="tx-tag">${escapeHtml(tx.categoryName)}</span>
-                                    <span>•</span>
-                                    <span>${tx.date}</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="tx-right">
-                            <span class="tx-amount ${isIncome ? 'income' : 'expense'}">
-                                ${isIncome ? '+' : '-'}$${tx.amount.toFixed(2)}
-                            </span>
-                            <button class="btn-delete" title="Delete" onclick="deleteTransaction(${tx.id})">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    `;
-                    container.appendChild(item);
-                });
-
-                return list;
+                filterTransactions();
+                return allTransactions;
             } catch (err) {
                 showNotification(err.message, "error");
                 return [];
             }
+        }
+
+        function filterTransactions() {
+            const query = (document.getElementById("tx-search-input")?.value || "").toLowerCase().trim();
+            const typeFilter = document.getElementById("tx-type-filter")?.value || "ALL";
+
+            const filtered = allTransactions.filter(tx => {
+                const matchesSearch = (tx.description || "").toLowerCase().includes(query) || (tx.categoryName || "").toLowerCase().includes(query);
+                const matchesType = typeFilter === "ALL" || tx.categoryType === typeFilter;
+                return matchesSearch && matchesType;
+            });
+
+            renderTransactionsList(filtered);
+        }
+
+        function renderTransactionsList(list) {
+            const container = document.getElementById("transaction-list-container");
+            document.getElementById("tx-count").innerText = `${list.length} item${list.length === 1 ? '' : 's'}`;
+
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <p>No matching transactions found.</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = "";
+            list.forEach(tx => {
+                const item = document.createElement("div");
+                item.className = "transaction-item";
+                
+                const isIncome = tx.categoryType === "INCOME";
+                const iconClass = isIncome ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
+                
+                item.innerHTML = `
+                    <div class="tx-info">
+                        <div class="tx-icon-box ${isIncome ? 'income' : 'expense'}">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div class="tx-details">
+                            <span class="tx-desc">${escapeHtml(tx.description)}</span>
+                            <div class="tx-meta">
+                                <span class="tx-tag">${escapeHtml(tx.categoryName)}</span>
+                                <span>•</span>
+                                <span>${tx.date}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tx-right">
+                        <span class="tx-amount ${isIncome ? 'income' : 'expense'}">
+                            ${isIncome ? '+' : '-'}$${tx.amount.toFixed(2)}
+                        </span>
+                        <button class="btn-delete" title="Delete" onclick="deleteTransaction(${tx.id})">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
         }
 
         async function loadBudgets() {
