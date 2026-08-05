@@ -858,6 +858,9 @@
 
         <!-- Main Body -->
         <main class="main-container">
+            <!-- Automatic Alert Notifications -->
+            <div id="alert-banner-container" style="display: none; margin-bottom: 20px; border-radius: var(--radius-md); padding: 14px 20px; font-weight: 600; display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow-sm);"></div>
+
             <!-- Balance & Overview Cards -->
             <section class="overview-grid">
                 <div class="overview-card">
@@ -1410,8 +1413,36 @@
                     `;
                     container.appendChild(item);
                 });
+
+                checkBudgetAlerts(budgets);
             } catch (err) {
                 showNotification(err.message, "error");
+            }
+        }
+
+        function checkBudgetAlerts(budgets) {
+            const banner = document.getElementById("alert-banner-container");
+            if (!banner) return;
+
+            const exceeded = budgets.filter(b => b.exceeded);
+            const warning = budgets.filter(b => b.closeToLimit && !b.exceeded);
+
+            if (exceeded.length > 0) {
+                const names = exceeded.map(b => b.categoryName).join(", ");
+                banner.style.display = "flex";
+                banner.style.background = "#fef2f2";
+                banner.style.color = "#991b1b";
+                banner.style.border = "1px solid #fecaca";
+                banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation" style="font-size: 1.2rem;"></i> <span><strong>Budget Exceeded Alert:</strong> You have exceeded your monthly budget for: <strong>${escapeHtml(names)}</strong>!</span>`;
+            } else if (warning.length > 0) {
+                const names = warning.map(b => b.categoryName).join(", ");
+                banner.style.display = "flex";
+                banner.style.background = "#fffbeb";
+                banner.style.color = "#92400e";
+                banner.style.border = "1px solid #fde68a";
+                banner.innerHTML = `<i class="fa-solid fa-circle-exclamation" style="font-size: 1.2rem;"></i> <span><strong>Budget Warning:</strong> You are near your monthly budget limit (80%+) for: <strong>${escapeHtml(names)}</strong>.</span>`;
+            } else {
+                banner.style.display = "none";
             }
         }
 
