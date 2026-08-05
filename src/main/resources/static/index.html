@@ -887,6 +887,9 @@
             <section class="action-bar">
                 <h2 class="section-title">Dashboard Overview</h2>
                 <div class="action-buttons">
+                    <button class="btn-secondary" onclick="exportTransactionsCSV()">
+                        <i class="fa-solid fa-file-csv"></i> Export CSV
+                    </button>
                     <button class="btn-secondary" onclick="openModal('modal-category')">
                         <i class="fa-solid fa-tags"></i> Add Category
                     </button>
@@ -1534,6 +1537,40 @@
                 
                 showNotification("Transaction deleted", "info");
                 loadDashboardData();
+            } catch (err) {
+                showNotification(err.message, "error");
+            }
+        }
+
+        async function exportTransactionsCSV() {
+            try {
+                const res = await fetch(`${API_BASE}/transactions`, {
+                    headers: { "Authorization": `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Could not fetch transactions for export");
+                const list = await res.json();
+
+                if (!list || list.length === 0) {
+                    showNotification("No transactions available to export", "warning");
+                    return;
+                }
+
+                let csvContent = "data:text/csv;charset=utf-8,ID,Date,Description,Category,Type,Amount\n";
+                list.forEach(tx => {
+                    const desc = `"${(tx.description || '').replace(/"/g, '""')}"`;
+                    const cat = `"${(tx.categoryName || '').replace(/"/g, '""')}"`;
+                    csvContent += `${tx.id},${tx.date},${desc},${cat},${tx.categoryType},${tx.amount}\n`;
+                });
+
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `apexfinance_transactions_${new Date().toISOString().split('T')[0]}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                showNotification("Transactions exported to CSV!", "success");
             } catch (err) {
                 showNotification(err.message, "error");
             }
