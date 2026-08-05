@@ -9,6 +9,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Data Visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -897,6 +899,27 @@
                 </div>
             </section>
 
+            <!-- Analytics Charts Section -->
+            <section class="overview-grid" style="grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 20px;">
+                <div class="panel-card" style="margin-bottom: 0;">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Expense Breakdown by Category</h3>
+                    </div>
+                    <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="panel-card" style="margin-bottom: 0;">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-chart-column"></i> Monthly Cashflow (Income vs Expense)</h3>
+                    </div>
+                    <div style="position: relative; height: 260px; display: flex; align-items: center; justify-content: center;">
+                        <canvas id="cashflowChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
             <!-- 2-Column Dashboard Grid -->
             <section class="dashboard-body">
                 <!-- Left: Recent Transactions -->
@@ -1149,11 +1172,15 @@
             checkSession();
         }
 
+        let categoryChartInstance = null;
+        let cashflowChartInstance = null;
+
         async function loadDashboardData() {
             await loadCategories();
-            await loadTransactions();
+            const transactions = await loadTransactions();
             await loadBudgets();
-            await loadSummary();
+            const summary = await loadSummary();
+            renderCharts(transactions, summary);
         }
 
         async function loadCategories() {
@@ -1243,8 +1270,11 @@
                     `;
                     container.appendChild(item);
                 });
+
+                return list;
             } catch (err) {
                 showNotification(err.message, "error");
+                return [];
             }
         }
 
@@ -1321,9 +1351,91 @@
                 const valBalance = document.getElementById("val-balance");
                 valBalance.innerText = `$${balance.toFixed(2)}`;
                 valBalance.style.color = balance >= 0 ? "var(--primary)" : "var(--danger)";
+                return summary;
             } catch (err) {
                 showNotification(err.message, "error");
+                return null;
             }
+        }
+
+        function renderCharts(transactions, summary) {
+            if (!transactions || !window.Chart) return;
+
+            // 1. Doughnut Chart: Expenses by Category
+            const expenses = transactions.filter(t => t.categoryType === 'EXPENSE');
+            const categoryTotals = {};
+            expenses.forEach(t => {
+                categoryTotals[t.categoryName] = (categoryTotals[t.categoryName] || 0) + t.amount;
+            });
+
+            const catLabels = Object.keys(categoryTotals);
+            const catData = Object.values(categoryTotals);
+            const palette = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#8b5cf6', '#06b9d4', '#ec4899'];
+
+            const ctxCategory = document.getElementById('categoryChart').getContext('2d');
+            if (categoryChartInstance) categoryChartInstance.destroy();
+
+            if (catLabels.length === 0) {
+                categoryChartInstance = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['No Expense Data'],
+                        datasets: [{ data: [1], backgroundColor: ['#e2e8f0'] }]
+                    },
+                    options: { responsive: true, maintainAspectRatio: false }
+                });
+            } else {
+                categoryChartInstance = new Chart(ctxCategory, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels,
+                        datasets: [{
+                            data: catData,
+                            backgroundColor: palette.slice(0, catLabels.length),
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, font: { family: 'Plus Jakarta Sans', weight: '600' } } }
+                        }
+                    }
+                });
+            }
+
+            // 2. Bar Chart: Monthly Income vs Expenses
+            const ctxCashflow = document.getElementById('cashflowChart').getContext('2d');
+            if (cashflowChartInstance) cashflowChartInstance.destroy();
+
+            const totalInc = summary ? summary.totalIncome : 0;
+            const totalExp = summary ? summary.totalExpenses : 0;
+
+            cashflowChartInstance = new Chart(ctxCashflow, {
+                type: 'bar',
+                data: {
+                    labels: ['Income', 'Expenses'],
+                    datasets: [{
+                        label: 'Amount ($)',
+                        data: [totalInc, totalExp],
+                        backgroundColor: ['#10b981', '#ef4444'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
         }
 
         async function handleAddTransaction(e) {
