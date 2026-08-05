@@ -1327,7 +1327,9 @@
                         <p>No matching transactions found.</p>
                     </div>`;
                 return;
-             container.innerHTML = "";
+            }
+
+            container.innerHTML = "";
             list.forEach(tx => {
                 const item = document.createElement("div");
                 item.className = "transaction-item";
