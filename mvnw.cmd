@@ -10,4 +10,4 @@ if exist %WRAPPER_JAR% goto run
 echo Error: Could not find %WRAPPER_JAR%
 exit /b 1
 :run
-"%JAVA_HOME%\bin\java.exe" -classpath %WRAPPER_JAR% %WRAPPER_LAUNCHER% %*
+"%JAVA_HOME%\bin\java.exe" "-Dmaven.multiModuleProjectDirectory=%MAVEN_PROJECTBASEDIR%" -classpath %WRAPPER_JAR% %WRAPPER_LAUNCHER% %*
