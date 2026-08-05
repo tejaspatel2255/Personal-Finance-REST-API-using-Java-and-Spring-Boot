@@ -3,684 +3,1047 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ApexFinance - Personal Wealth Dashboard</title>
-    <!-- Google Fonts -->
+    <title>ApexFinance - Simple & Smart Personal Finance</title>
+    <!-- Google Fonts & Font Awesome Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: rgba(22, 28, 45, 0.6);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-primary: #f3f4f6;
-            --text-secondary: #9ca3af;
-            --accent-cyan: #06b6d4;
-            --accent-purple: #8b5cf6;
-            --accent-emerald: #10b981;
-            --accent-rose: #f43f5e;
-            --accent-amber: #f59e0b;
-            --glass-blur: blur(16px);
+            --bg-main: #f8fafc;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --danger: #ef4444;
+            --danger-light: #fef2f2;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --radius-sm: 8px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-primary);
+            background-color: var(--bg-main);
+            color: var(--text-main);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.15) 0%, transparent 40%);
-            background-attachment: fixed;
         }
 
-        h1, h2, h3, h4 {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
-        }
-
-        /* Notifications */
+        /* Toast Notifications */
         #notification-container {
             position: fixed;
             top: 20px;
             right: 20px;
-            z-index: 1000;
+            z-index: 9999;
             display: flex;
             flex-direction: column;
             gap: 10px;
+            max-width: 360px;
+            width: 100%;
         }
 
         .notification {
-            background: rgba(17, 24, 39, 0.9);
-            border-left: 4px solid var(--accent-cyan);
-            padding: 16px 20px;
-            border-radius: 8px;
-            color: var(--text-primary);
-            min-width: 300px;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--primary);
+            padding: 14px 18px;
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            box-shadow: var(--shadow-lg);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            animation: slideIn 0.3s ease-out forwards;
-            backdrop-filter: var(--glass-blur);
+            font-size: 0.95rem;
+            animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         @keyframes slideIn {
-            from { transform: translateX(120%); }
-            to { transform: translateX(0); }
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
         }
 
-        .notification.success { border-left-color: var(--accent-emerald); }
-        .notification.error { border-left-color: var(--accent-rose); }
-        .notification.warning { border-left-color: var(--accent-amber); }
+        .notification.success { border-left-color: var(--success); }
+        .notification.error { border-left-color: var(--danger); }
+        .notification.warning { border-left-color: var(--warning); }
 
         .notification-close {
             cursor: pointer;
-            color: var(--text-secondary);
-            font-weight: bold;
-            margin-left: 10px;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            margin-left: 12px;
         }
 
-        /* Glassmorphic Auth Container */
-        .auth-wrapper {
+        /* AUTH SCREEN */
+        .auth-container {
             display: flex;
-            justify-content: center;
+            min-height: 100vh;
             align-items: center;
-            flex-grow: 1;
+            justify-content: center;
             padding: 20px;
+            background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);
         }
 
         .auth-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
+            background: var(--surface);
             border-radius: 24px;
-            padding: 40px;
+            box-shadow: var(--shadow-lg);
             width: 100%;
-            max-width: 450px;
-            backdrop-filter: var(--glass-blur);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 440px;
+            padding: 40px 32px;
+            border: 1px solid var(--border);
+        }
+
+        .brand-header {
             text-align: center;
-            animation: fadeIn 0.5s ease-out;
+            margin-bottom: 32px;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        .brand-icon {
+            width: 56px;
+            height: 56px;
+            background: var(--primary-light);
+            color: var(--primary);
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 12px;
         }
 
-        .logo-section {
-            margin-bottom: 30px;
+        .brand-title {
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 4px;
         }
 
-        .logo-title {
-            font-size: 2.2rem;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-            margin-bottom: 5px;
+        .brand-subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
         }
 
-        .logo-tagline {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .auth-toggle {
+        .auth-tabs {
             display: flex;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            margin-bottom: 30px;
+            background: var(--bg-main);
+            border-radius: var(--radius-md);
             padding: 4px;
+            margin-bottom: 24px;
         }
 
-        .toggle-btn {
+        .auth-tab {
             flex: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
             padding: 10px;
+            text-align: center;
+            border: none;
+            background: transparent;
             font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            border-radius: 8px;
+            transition: all 0.2s ease;
         }
 
-        .toggle-btn.active {
-            background: var(--accent-purple);
-            color: var(--text-primary);
-            box-shadow: 0 4px 6px -1px rgba(139, 92, 246, 0.4);
+        .auth-tab.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
         }
 
-        /* Forms Styling */
         .form-group {
-            text-align: left;
             margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            font-weight: 500;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 6px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1rem;
         }
 
         .form-input {
             width: 100%;
-            background: rgba(0, 0, 0, 0.25);
-            border: 1px solid var(--card-border);
-            border-radius: 12px;
-            padding: 12px 16px;
-            color: var(--text-primary);
+            padding: 12px 14px 12px 40px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
             font-size: 0.95rem;
             outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: var(--surface);
+            color: var(--text-main);
         }
 
         .form-input:focus {
-            border-color: var(--accent-cyan);
-            box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
         }
 
-        .submit-btn {
+        .btn-primary {
             width: 100%;
-            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
-            color: var(--text-primary);
-            border: none;
-            border-radius: 12px;
             padding: 14px;
-            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 700;
             cursor: pointer;
-            margin-top: 10px;
-            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3);
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .submit-btn:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
+        .btn-primary:hover {
+            background: var(--primary-hover);
         }
 
-        /* Dashboard Container */
-        .dashboard-container {
-            display: none; /* Shown dynamically */
+        /* DASHBOARD LAYOUT */
+        .app-layout {
+            display: none;
+            min-height: 100vh;
             flex-direction: column;
-            width: 100%;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 24px;
-            gap: 24px;
-            animation: fadeIn 0.4s ease-out;
         }
 
-        /* Navigation Header */
-        .nav-header {
+        /* Top Navigation Header */
+        .navbar {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 32px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            padding: 16px 28px;
-            border-radius: 20px;
-            backdrop-filter: var(--glass-blur);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
 
-        .user-welcome {
-            font-size: 1.1rem;
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        .user-welcome span {
-            color: var(--accent-cyan);
-            font-weight: 600;
-        }
-
-        .logout-btn {
-            background: rgba(244, 63, 94, 0.15);
-            color: var(--accent-rose);
-            border: 1px solid rgba(244, 63, 94, 0.3);
+        .nav-brand-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary-light);
+            color: var(--primary);
             border-radius: 10px;
-            padding: 8px 16px;
-            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .nav-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--bg-main);
+            padding: 6px 14px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
             font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .avatar-circle {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .btn-logout {
+            background: var(--danger-light);
+            color: var(--danger);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
         }
 
-        .logout-btn:hover {
-            background: var(--accent-rose);
-            color: var(--text-primary);
+        .btn-logout:hover {
+            background: var(--danger);
+            color: white;
         }
 
-        /* Summary Stats Cards Grid */
-        .stats-grid {
+        /* Main Content Container */
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        /* Overview Cards */
+        .overview-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 20px;
         }
 
-        .stat-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
+        .overview-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
             padding: 24px;
-            position: relative;
-            overflow: hidden;
-            backdrop-filter: var(--glass-blur);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
-        .stat-card::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
+        .overview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
-        .stat-card.income::after { background: var(--accent-emerald); }
-        .stat-card.expense::after { background: var(--accent-rose); }
-        .stat-card.balance::after { background: var(--accent-cyan); }
-
-        .stat-label {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
+        .card-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
         }
 
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-        }
+        .card-icon.balance { background: var(--primary-light); color: var(--primary); }
+        .card-icon.income { background: var(--success-light); color: var(--success); }
+        .card-icon.expense { background: var(--danger-light); color: var(--danger); }
 
-        /* Main Workspace: Left Column (Forms) & Right Column (List) */
-        .workspace-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 24px;
-        }
-
-        @media (min-width: 900px) {
-            .workspace-grid {
-                grid-template-columns: 380px 1fr;
-            }
-        }
-
-        /* Panels */
-        .panel {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 24px;
-            backdrop-filter: var(--glass-blur);
+        .card-details {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            margin-bottom: 24px;
+            gap: 4px;
         }
 
-        .panel-title {
-            font-size: 1.3rem;
-            color: var(--text-primary);
-            border-bottom: 1px solid var(--card-border);
-            padding-bottom: 12px;
+        .card-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        /* Content Section Tabs / Quick Controls */
+        .action-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-
-        /* Forms Inside Panels */
-        .panel-form {
-            display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
             gap: 16px;
         }
 
-        .horizontal-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .action-buttons {
+            display: flex;
             gap: 12px;
         }
 
-        .panel-btn {
-            background: rgba(6, 182, 212, 0.1);
-            color: var(--accent-cyan);
-            border: 1px solid rgba(6, 182, 212, 0.3);
-            border-radius: 10px;
-            padding: 12px;
+        .btn-action {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
             font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
         }
 
-        .panel-btn:hover {
-            background: var(--accent-cyan);
-            color: var(--bg-color);
+        .btn-action:hover {
+            background: var(--primary-hover);
         }
 
-        /* Budget Progress Bars */
-        .budget-list {
+        .btn-secondary {
+            background: var(--surface);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            padding: 10px 18px;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-main);
+        }
+
+        /* 2-Column Dashboard Body */
+        .dashboard-body {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 28px;
+        }
+
+        @media (min-width: 992px) {
+            .dashboard-body {
+                grid-template-columns: 1fr 380px;
+            }
+        }
+
+        /* Cards / Panels */
+        .panel-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
         }
 
-        .budget-item {
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            padding: 14px 16px;
-            border: 1px solid var(--card-border);
-        }
-
-        .budget-header {
+        .panel-header {
             display: flex;
             justify-content: space-between;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
         }
 
-        .budget-cat {
-            font-weight: 600;
-        }
-
-        .budget-limits {
-            color: var(--text-secondary);
-        }
-
-        .progress-container {
-            width: 100%;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 4px;
-            overflow: hidden;
-            margin-bottom: 6px;
-        }
-
-        .progress-bar {
-            height: 100%;
-            width: 0%;
-            background: var(--accent-emerald);
-        }
-
-        .progress-bar.warning { background: var(--accent-amber); }
-        .progress-bar.exceeded { background: var(--accent-rose); }
-
-        .budget-footer {
+        .panel-title {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--text-main);
             display: flex;
-            justify-content: space-between;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
+            align-items: center;
+            gap: 10px;
         }
 
-        /* Transaction Log List */
-        .transaction-log {
-            flex-grow: 1;
-        }
-
+        /* Transaction List */
         .transaction-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            max-height: 500px;
-            overflow-y: auto;
-            padding-right: 4px;
         }
 
         .transaction-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(0, 0, 0, 0.15);
-            border: 1px solid var(--card-border);
-            border-radius: 14px;
-            padding: 16px 20px;
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            transition: border-color 0.2s, background-color 0.2s;
         }
 
         .transaction-item:hover {
-            border-color: rgba(255, 255, 255, 0.15);
+            border-color: #cbd5e1;
+            background-color: #f8fafc;
         }
 
-        .t-left {
+        .tx-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .tx-icon-box {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .tx-icon-box.income { background: var(--success-light); color: var(--success); }
+        .tx-icon-box.expense { background: var(--danger-light); color: var(--danger); }
+
+        .tx-details {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 2px;
         }
 
-        .t-desc {
-            font-weight: 600;
+        .tx-desc {
+            font-weight: 700;
             font-size: 0.95rem;
+            color: var(--text-main);
         }
 
-        .t-meta {
-            font-size: 0.78rem;
-            color: var(--text-secondary);
+        .tx-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
             display: flex;
-            gap: 10px;
+            align-items: center;
+            gap: 8px;
         }
 
-        .t-cat-tag {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 1px 6px;
-            border-radius: 4px;
+        .tx-tag {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
-        .t-right {
+        .tx-right {
             display: flex;
             align-items: center;
             gap: 16px;
         }
 
-        .t-amount {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 700;
+        .tx-amount {
             font-size: 1.1rem;
+            font-weight: 800;
         }
 
-        .t-amount.income { color: var(--accent-emerald); }
-        .t-amount.expense { color: var(--accent-rose); }
+        .tx-amount.income { color: var(--success); }
+        .tx-amount.expense { color: var(--text-main); }
 
-        .t-delete-btn {
+        .btn-delete {
             background: transparent;
             border: none;
-            color: var(--text-secondary);
+            color: #94a3b8;
             cursor: pointer;
-            font-size: 1.1rem;
-            padding: 4px;
+            font-size: 1rem;
+            padding: 6px;
+            border-radius: 6px;
+            transition: all 0.2s;
         }
 
-        .t-delete-btn:hover {
-            color: var(--accent-rose);
+        .btn-delete:hover {
+            color: var(--danger);
+            background: var(--danger-light);
+        }
+
+        /* Budget Items */
+        .budget-list {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .budget-card {
+            background: var(--bg-main);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .budget-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .budget-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .budget-values {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .progress-track {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 5px;
+            background: var(--success);
+            transition: width 0.4s ease;
+        }
+
+        .progress-fill.warning { background: var(--warning); }
+        .progress-fill.exceeded { background: var(--danger); }
+
+        .budget-foot {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 2.5rem;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+        }
+
+        /* MODAL POPUPS */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 480px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            animation: scaleUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .modal-title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .modal-close {
+            background: transparent;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            outline: none;
+            background: var(--surface);
+            color: var(--text-main);
+        }
+
+        .select-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
         }
     </style>
 </head>
 <body>
 
-    <!-- Notification container -->
+    <!-- Notification Toast Container -->
     <div id="notification-container"></div>
 
-    <!-- Auth Screen -->
-    <div class="auth-wrapper" id="auth-screen">
+    <!-- 1. EASY AUTHENTICATION SCREEN -->
+    <div class="auth-container" id="auth-screen">
         <div class="auth-card">
-            <div class="logo-section">
-                <h1 class="logo-title">ApexFinance</h1>
-                <p class="logo-tagline">Track, Manage, and Optimize Wealth</p>
+            <div class="brand-header">
+                <div class="brand-icon"><i class="fa-solid fa-wallet"></i></div>
+                <h1 class="brand-title">ApexFinance</h1>
+                <p class="brand-subtitle">Simple, easy personal wealth tracker</p>
             </div>
-            
-            <div class="auth-toggle">
-                <button class="toggle-btn active" id="toggle-login" onclick="switchAuthMode('login')">Sign In</button>
-                <button class="toggle-btn" id="toggle-register" onclick="switchAuthMode('register')">Register</button>
+
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="switchAuthMode('login')">Sign In</button>
+                <button class="auth-tab" id="tab-register" onclick="switchAuthMode('register')">Create Account</button>
             </div>
 
             <!-- Login Form -->
-            <form id="login-form" class="panel-form" onsubmit="handleLogin(event)">
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
                     <label for="login-username">Username</label>
-                    <input type="text" id="login-username" class="form-input" required placeholder="Enter username">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="login-username" class="form-input" required placeholder="Enter your username">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="form-input" required placeholder="Enter password">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="login-password" class="form-input" required placeholder="Enter your password">
+                    </div>
                 </div>
-                <button type="submit" class="submit-btn">Login to Dashboard</button>
+                <button type="submit" class="btn-primary">
+                    <span>Sign In</span> <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </form>
 
             <!-- Register Form -->
-            <form id="register-form" class="panel-form" style="display: none;" onsubmit="handleRegister(event)">
+            <form id="register-form" style="display: none;" onsubmit="handleRegister(event)">
                 <div class="form-group">
-                    <label for="reg-username">Username</label>
-                    <input type="text" id="reg-username" class="form-input" required placeholder="Choose username">
+                    <label for="reg-username">Choose Username</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        <input type="text" id="reg-username" class="form-input" required placeholder="e.g. john_doe">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="reg-email">Email Address</label>
-                    <input type="email" id="reg-email" class="form-input" required placeholder="Enter email">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        <input type="email" id="reg-email" class="form-input" required placeholder="name@example.com">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="reg-password">Password</label>
-                    <input type="password" id="reg-password" class="form-input" required placeholder="Create password">
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        <input type="password" id="reg-password" class="form-input" required placeholder="Create a password">
+                    </div>
                 </div>
-                <button type="submit" class="submit-btn">Create Account</button>
+                <button type="submit" class="btn-primary">
+                    <span>Create Account</span> <i class="fa-solid fa-user-plus"></i>
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- Dashboard Screen -->
-    <div class="dashboard-container" id="dashboard-screen">
-        <!-- Nav Header -->
-        <header class="nav-header">
-            <div class="user-welcome">Welcome, <span id="display-username">User</span></div>
-            <h2 style="font-size: 1.5rem; letter-spacing: -0.5px;">ApexFinance</h2>
-            <button class="logout-btn" onclick="handleLogout()">Sign Out</button>
+    <!-- 2. MAIN DASHBOARD LAYOUT -->
+    <div class="app-layout" id="dashboard-screen">
+        <!-- Navbar -->
+        <header class="navbar">
+            <div class="nav-brand">
+                <div class="nav-brand-icon"><i class="fa-solid fa-wallet"></i></div>
+                <span class="nav-title">ApexFinance</span>
+            </div>
+            
+            <div class="nav-user">
+                <div class="user-badge">
+                    <div class="avatar-circle" id="user-avatar">U</div>
+                    <span id="display-username">User</span>
+                </div>
+                <button class="btn-logout" onclick="handleLogout()">
+                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                </button>
+            </div>
         </header>
 
-        <!-- Stats Cards Summary -->
-        <div class="stats-grid">
-            <div class="stat-card balance">
-                <p class="stat-label">Current Balance</p>
-                <h3 class="stat-value" id="val-balance">$0.00</h3>
-            </div>
-            <div class="stat-card income">
-                <p class="stat-label">Total Monthly Income</p>
-                <h3 class="stat-value" id="val-income">$0.00</h3>
-            </div>
-            <div class="stat-card expense">
-                <p class="stat-label">Total Monthly Expense</p>
-                <h3 class="stat-value" id="val-expense">$0.00</h3>
-            </div>
-        </div>
+        <!-- Main Body -->
+        <main class="main-container">
+            <!-- Balance & Overview Cards -->
+            <section class="overview-grid">
+                <div class="overview-card">
+                    <div class="card-icon balance"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Net Balance</span>
+                        <span class="card-value" id="val-balance">$0.00</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon income"><i class="fa-solid fa-arrow-trend-up"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Monthly Income</span>
+                        <span class="card-value" id="val-income">$0.00</span>
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon expense"><i class="fa-solid fa-arrow-trend-down"></i></div>
+                    <div class="card-details">
+                        <span class="card-label">Monthly Expenses</span>
+                        <span class="card-value" id="val-expense">$0.00</span>
+                    </div>
+                </div>
+            </section>
 
-        <!-- Main Workspace -->
-        <div class="workspace-grid">
-            <!-- Left Column: Forms -->
-            <div class="left-col">
-                <!-- Add Transaction -->
-                <div class="panel">
-                    <h3 class="panel-title">Add Transaction</h3>
-                    <form class="panel-form" onsubmit="handleAddTransaction(event)">
-                        <div class="form-group">
-                            <label for="tx-amount">Amount ($)</label>
-                            <input type="number" step="0.01" min="0.01" id="tx-amount" class="form-input" required placeholder="0.00">
+            <!-- Action Bar -->
+            <section class="action-bar">
+                <h2 class="section-title">Dashboard Overview</h2>
+                <div class="action-buttons">
+                    <button class="btn-secondary" onclick="openModal('modal-category')">
+                        <i class="fa-solid fa-tags"></i> Add Category
+                    </button>
+                    <button class="btn-secondary" onclick="openModal('modal-budget')">
+                        <i class="fa-solid fa-bullseye"></i> Set Monthly Limit
+                    </button>
+                    <button class="btn-action" onclick="openModal('modal-transaction')">
+                        <i class="fa-solid fa-plus"></i> Add Transaction
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2-Column Dashboard Grid -->
+            <section class="dashboard-body">
+                <!-- Left: Recent Transactions -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-receipt"></i> Recent Transactions</h3>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);" id="tx-count">0 items</span>
+                    </div>
+                    <div class="transaction-list" id="transaction-list-container">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-inbox"></i>
+                            <p>No transactions added yet. Click "+ Add Transaction" to begin!</p>
                         </div>
-                        <div class="form-group">
-                            <label for="tx-desc">Description</label>
-                            <input type="text" id="tx-desc" class="form-input" required placeholder="Groceries, Rent, Salary...">
-                        </div>
-                        <div class="horizontal-group">
-                            <div class="form-group">
-                                <label for="tx-category">Category</label>
-                                <select id="tx-category" class="form-input" required>
-                                    <option value="" disabled selected>Select category</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label for="tx-date">Date</label>
-                                <input type="date" id="tx-date" class="form-input" required>
-                            </div>
-                        </div>
-                        <button type="submit" class="panel-btn">Record Transaction</button>
-                    </form>
+                    </div>
                 </div>
 
-                <!-- Add Category & Set Budget -->
-                <div class="panel">
-                    <h3 class="panel-title">Setup & Budgeting</h3>
-                    <form class="panel-form" onsubmit="handleAddCategory(event)">
-                        <div class="horizontal-group">
-                            <div class="form-group">
-                                <label for="cat-name">Category Name</label>
-                                <input type="text" id="cat-name" class="form-input" required placeholder="e.g. Health">
-                            </div>
-                            <div class="form-group">
-                                <label for="cat-type">Type</label>
-                                <select id="cat-type" class="form-input" required>
-                                    <option value="EXPENSE">Expense</option>
-                                    <option value="INCOME">Income</option>
-                                </select>
-                            </div>
+                <!-- Right: Monthly Budgets -->
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <h3 class="panel-title"><i class="fa-solid fa-chart-pie"></i> Budget Limits</h3>
+                    </div>
+                    <div class="budget-list" id="budget-list-container">
+                        <div class="empty-state">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <p>No budget limits set. Click "Set Monthly Limit" to track spending limits.</p>
                         </div>
-                        <button type="submit" class="panel-btn">Create Category</button>
-                    </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
 
-                    <form class="panel-form" onsubmit="handleSetBudget(event)" style="margin-top: 10px; border-top: 1px solid var(--card-border); padding-top: 15px;">
+    <!-- 3. MODALS FOR SIMPLE STEP-BY-STEP ACTIONS -->
+
+    <!-- Add Transaction Modal -->
+    <div class="modal-overlay" id="modal-transaction">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-plus-circle" style="color: var(--primary);"></i> Add Transaction</h3>
+                <button class="modal-close" onclick="closeModal('modal-transaction')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="handleAddTransaction(event)">
+                    <div class="form-group">
+                        <label for="tx-amount">Amount ($)</label>
+                        <input type="number" step="0.01" min="0.01" id="tx-amount" class="select-input" required placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label for="tx-desc">Description</label>
+                        <input type="text" id="tx-desc" class="select-input" required placeholder="e.g. Weekly Groceries, Salary">
+                    </div>
+                    <div class="form-row">
                         <div class="form-group">
-                            <label for="b-category">Limit Category</label>
-                            <select id="b-category" class="form-input" required>
+                            <label for="tx-category">Category</label>
+                            <select id="tx-category" class="select-input" required>
                                 <option value="" disabled selected>Choose category</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label for="b-limit">Monthly Limit ($)</label>
-                            <input type="number" step="0.01" min="1" id="b-limit" class="form-input" required placeholder="500.00">
+                            <label for="tx-date">Date</label>
+                            <input type="date" id="tx-date" class="select-input" required>
                         </div>
-                        <button type="submit" class="panel-btn">Set Limit</button>
-                    </form>
-                </div>
-            </div>
-
-            <!-- Right Column: Graphs/Progress and List -->
-            <div class="right-col">
-                <!-- Budgets Status -->
-                <div class="panel">
-                    <h3 class="panel-title">Budget Allocation</h3>
-                    <div class="budget-list" id="budget-list-container">
-                        <p style="color: var(--text-secondary); text-align: center; padding: 10px;">No active budgets found for this month.</p>
                     </div>
-                </div>
-
-                <!-- Transaction Log -->
-                <div class="panel transaction-log">
-                    <h3 class="panel-title">Monthly Transactions Log</h3>
-                    <div class="transaction-list" id="transaction-list-container">
-                        <p style="color: var(--text-secondary); text-align: center; padding: 20px;">No transactions logged yet.</p>
-                    </div>
-                </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Transaction</button>
+                </form>
             </div>
         </div>
     </div>
 
-    <!-- JS Logic -->
+    <!-- Add Category Modal -->
+    <div class="modal-overlay" id="modal-category">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-tags" style="color: var(--primary);"></i> Create New Category</h3>
+                <button class="modal-close" onclick="closeModal('modal-category')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="handleAddCategory(event)">
+                    <div class="form-group">
+                        <label for="cat-name">Category Name</label>
+                        <input type="text" id="cat-name" class="select-input" required placeholder="e.g. Dining Out, Utilities">
+                    </div>
+                    <div class="form-group">
+                        <label for="cat-type">Type</label>
+                        <select id="cat-type" class="select-input" required>
+                            <option value="EXPENSE">Expense (Money spent)</option>
+                            <option value="INCOME">Income (Money earned)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Create Category</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Set Budget Modal -->
+    <div class="modal-overlay" id="modal-budget">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-bullseye" style="color: var(--primary);"></i> Set Monthly Limit</h3>
+                <button class="modal-close" onclick="closeModal('modal-budget')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form onsubmit="handleSetBudget(event)">
+                    <div class="form-group">
+                        <label for="b-category">Expense Category</label>
+                        <select id="b-category" class="select-input" required>
+                            <option value="" disabled selected>Select category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="b-limit">Monthly Limit ($)</label>
+                        <input type="number" step="0.01" min="1" id="b-limit" class="select-input" required placeholder="e.g. 500.00">
+                    </div>
+                    <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Monthly Limit</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. JAVASCRIPT APP LOGIC -->
     <script>
-        const API_BASE = "http://localhost:8080/api";
+        const API_BASE = "/api";
         let token = localStorage.getItem("token") || null;
         let username = localStorage.getItem("username") || null;
         let categories = [];
 
         document.addEventListener("DOMContentLoaded", () => {
-            // Set default date input value to today
             document.getElementById("tx-date").value = new Date().toISOString().split('T')[0];
             checkSession();
         });
+
+        // Modal Helpers
+        function openModal(id) {
+            document.getElementById(id).style.display = 'flex';
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        // Close modal when clicking outside box
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = "none";
+            }
+        }
 
         function showNotification(message, type = 'info') {
             const container = document.getElementById("notification-container");
@@ -691,25 +1054,25 @@
                 <span class="notification-close" onclick="this.parentElement.remove()">&times;</span>
             `;
             container.appendChild(div);
-            setTimeout(() => div.remove(), 5000);
+            setTimeout(() => div.remove(), 4000);
         }
 
         function switchAuthMode(mode) {
             const loginForm = document.getElementById("login-form");
             const registerForm = document.getElementById("register-form");
-            const btnLogin = document.getElementById("toggle-login");
-            const btnRegister = document.getElementById("toggle-register");
+            const tabLogin = document.getElementById("tab-login");
+            const tabRegister = document.getElementById("tab-register");
 
             if (mode === 'login') {
-                loginForm.style.display = "flex";
+                loginForm.style.display = "block";
                 registerForm.style.display = "none";
-                btnLogin.classList.add("active");
-                btnRegister.classList.remove("active");
+                tabLogin.classList.add("active");
+                tabRegister.classList.remove("active");
             } else {
                 loginForm.style.display = "none";
-                registerForm.style.display = "flex";
-                btnLogin.classList.remove("active");
-                btnRegister.classList.add("active");
+                registerForm.style.display = "block";
+                tabLogin.classList.remove("active");
+                tabRegister.classList.add("active");
             }
         }
 
@@ -718,6 +1081,7 @@
                 document.getElementById("auth-screen").style.display = "none";
                 document.getElementById("dashboard-screen").style.display = "flex";
                 document.getElementById("display-username").innerText = username;
+                document.getElementById("user-avatar").innerText = username.charAt(0).toUpperCase();
                 loadDashboardData();
             } else {
                 document.getElementById("auth-screen").style.display = "flex";
@@ -738,7 +1102,7 @@
                 });
 
                 if (!res.ok) {
-                    throw new Error("Invalid credentials or server error");
+                    throw new Error("Invalid username or password");
                 }
 
                 const data = await res.json();
@@ -746,7 +1110,7 @@
                 username = usernameInput;
                 localStorage.setItem("token", token);
                 localStorage.setItem("username", username);
-                showNotification("Logged in successfully!", "success");
+                showNotification("Welcome back!", "success");
                 checkSession();
             } catch (err) {
                 showNotification(err.message, "error");
@@ -767,10 +1131,10 @@
                 });
 
                 if (!res.ok) {
-                    throw new Error("Registration failed. Try a different username/email.");
+                    throw new Error("Registration failed. Username or email might be taken.");
                 }
 
-                showNotification("Registration successful! Please login.", "success");
+                showNotification("Account created! Please sign in.", "success");
                 switchAuthMode('login');
             } catch (err) {
                 showNotification(err.message, "error");
@@ -800,20 +1164,18 @@
                 if (!res.ok) throw new Error("Could not load categories");
                 categories = await res.json();
                 
-                // Populate dropdowns
                 const txDropdown = document.getElementById("tx-category");
                 const bDropdown = document.getElementById("b-category");
                 
-                txDropdown.innerHTML = '<option value="" disabled selected>Select category</option>';
-                bDropdown.innerHTML = '<option value="" disabled selected>Choose category</option>';
+                txDropdown.innerHTML = '<option value="" disabled selected>Choose category</option>';
+                bDropdown.innerHTML = '<option value="" disabled selected>Select category</option>';
                 
                 categories.forEach(cat => {
                     const opt = document.createElement("option");
                     opt.value = cat.id;
-                    opt.innerText = `${cat.name} (${cat.type})`;
+                    opt.innerText = `${cat.name} (${cat.type === 'INCOME' ? 'Income' : 'Expense'})`;
                     txDropdown.appendChild(opt);
 
-                    // Add only expense categories to budget setup
                     if (cat.type === "EXPENSE") {
                         const optBudget = document.createElement("option");
                         optBudget.value = cat.id;
@@ -835,31 +1197,48 @@
                 const list = await res.json();
                 
                 const container = document.getElementById("transaction-list-container");
+                document.getElementById("tx-count").innerText = `${list.length} item${list.length === 1 ? '' : 's'}`;
+
                 if (list.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 20px;">No transactions logged yet.</p>';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-inbox"></i>
+                            <p>No transactions added yet. Click "+ Add Transaction" to begin!</p>
+                        </div>`;
                     return;
                 }
 
                 container.innerHTML = "";
-                list.sort((a,b) => new Date(b.date) - new Date(a.date)); // Sort newest first
+                list.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
                 list.forEach(tx => {
                     const item = document.createElement("div");
                     item.className = "transaction-item";
                     
                     const isIncome = tx.categoryType === "INCOME";
+                    const iconClass = isIncome ? 'fa-arrow-down-left' : 'fa-arrow-up-right';
                     
                     item.innerHTML = `
-                        <div class="t-left">
-                            <span class="t-desc">${escapeHtml(tx.description)}</span>
-                            <div class="t-meta">
-                                <span class="t-cat-tag">${escapeHtml(tx.categoryName)}</span>
-                                <span>${tx.date}</span>
+                        <div class="tx-info">
+                            <div class="tx-icon-box ${isIncome ? 'income' : 'expense'}">
+                                <i class="fa-solid ${iconClass}"></i>
+                            </div>
+                            <div class="tx-details">
+                                <span class="tx-desc">${escapeHtml(tx.description)}</span>
+                                <div class="tx-meta">
+                                    <span class="tx-tag">${escapeHtml(tx.categoryName)}</span>
+                                    <span>•</span>
+                                    <span>${tx.date}</span>
+                                </div>
                             </div>
                         </div>
-                        <div class="t-right">
-                            <span class="t-amount ${isIncome ? 'income' : 'expense'}">${isIncome ? '+' : '-'}$${tx.amount.toFixed(2)}</span>
-                            <button class="t-delete-btn" onclick="deleteTransaction(${tx.id})">&times;</button>
+                        <div class="tx-right">
+                            <span class="tx-amount ${isIncome ? 'income' : 'expense'}">
+                                ${isIncome ? '+' : '-'}$${tx.amount.toFixed(2)}
+                            </span>
+                            <button class="btn-delete" title="Delete" onclick="deleteTransaction(${tx.id})">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </div>
                     `;
                     container.appendChild(item);
@@ -882,33 +1261,37 @@
                 
                 const container = document.getElementById("budget-list-container");
                 if (budgets.length === 0) {
-                    container.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 10px;">No active budgets found for this month.</p>';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fa-solid fa-chart-line"></i>
+                            <p>No budget limits set. Click "Set Monthly Limit" to track spending limits.</p>
+                        </div>`;
                     return;
                 }
 
                 container.innerHTML = "";
                 budgets.forEach(b => {
                     const item = document.createElement("div");
-                    item.className = "budget-item";
+                    item.className = "budget-card";
                     
-                    let progressClass = "";
+                    let fillClass = "";
                     if (b.exceeded) {
-                        progressClass = "exceeded";
+                        fillClass = "exceeded";
                     } else if (b.closeToLimit) {
-                        progressClass = "warning";
+                        fillClass = "warning";
                     }
                     
                     const capPercent = Math.min(100, b.utilizationPercent);
                     
                     item.innerHTML = `
-                        <div class="budget-header">
-                            <span class="budget-cat">${escapeHtml(b.categoryName)}</span>
-                            <span class="budget-limits">$${b.spent.toFixed(2)} / $${b.monthlyLimit.toFixed(2)}</span>
+                        <div class="budget-head">
+                            <span class="budget-name">${escapeHtml(b.categoryName)}</span>
+                            <span class="budget-values">$${b.spent.toFixed(2)} of $${b.monthlyLimit.toFixed(2)}</span>
                         </div>
-                        <div class="progress-container">
-                            <div class="progress-bar ${progressClass}" style="width: ${capPercent}%"></div>
+                        <div class="progress-track">
+                            <div class="progress-fill ${fillClass}" style="width: ${capPercent}%"></div>
                         </div>
-                        <div class="budget-footer">
+                        <div class="budget-foot">
                             <span>${b.utilizationPercent.toFixed(1)}% Used</span>
                             <span>$${Math.max(0, b.remaining).toFixed(2)} remaining</span>
                         </div>
@@ -937,7 +1320,7 @@
                 const balance = summary.totalIncome - summary.totalExpenses;
                 const valBalance = document.getElementById("val-balance");
                 valBalance.innerText = `$${balance.toFixed(2)}`;
-                valBalance.style.color = balance >= 0 ? "var(--accent-emerald)" : "var(--accent-rose)";
+                valBalance.style.color = balance >= 0 ? "var(--primary)" : "var(--danger)";
             } catch (err) {
                 showNotification(err.message, "error");
             }
@@ -962,9 +1345,10 @@
 
                 if (!res.ok) throw new Error("Transaction submission failed");
                 
-                showNotification("Transaction logged!", "success");
+                showNotification("Transaction recorded!", "success");
                 document.getElementById("tx-amount").value = "";
                 document.getElementById("tx-desc").value = "";
+                closeModal('modal-transaction');
                 loadDashboardData();
             } catch (err) {
                 showNotification(err.message, "error");
@@ -990,6 +1374,7 @@
 
                 showNotification(`Category "${name}" created!`, "success");
                 document.getElementById("cat-name").value = "";
+                closeModal('modal-category');
                 loadDashboardData();
             } catch (err) {
                 showNotification(err.message, "error");
@@ -1015,8 +1400,9 @@
 
                 if (!res.ok) throw new Error("Failed to set budget");
 
-                showNotification("Budget updated successfully!", "success");
+                showNotification("Monthly limit set successfully!", "success");
                 document.getElementById("b-limit").value = "";
+                closeModal('modal-budget');
                 loadDashboardData();
             } catch (err) {
                 showNotification(err.message, "error");
