@@ -867,21 +867,21 @@
                     <div class="card-icon balance"><i class="fa-solid fa-scale-balanced"></i></div>
                     <div class="card-details">
                         <span class="card-label">Net Balance</span>
-                        <span class="card-value" id="val-balance">$0.00</span>
+                        <span class="card-value" id="val-balance">₹0.00</span>
                     </div>
                 </div>
                 <div class="overview-card">
                     <div class="card-icon income"><i class="fa-solid fa-arrow-trend-up"></i></div>
                     <div class="card-details">
                         <span class="card-label">Monthly Income</span>
-                        <span class="card-value" id="val-income">$0.00</span>
+                        <span class="card-value" id="val-income">₹0.00</span>
                     </div>
                 </div>
                 <div class="overview-card">
                     <div class="card-icon expense"><i class="fa-solid fa-arrow-trend-down"></i></div>
                     <div class="card-details">
                         <span class="card-label">Monthly Expenses</span>
-                        <span class="card-value" id="val-expense">$0.00</span>
+                        <span class="card-value" id="val-expense">₹0.00</span>
                     </div>
                 </div>
             </section>
@@ -1002,7 +1002,7 @@
             <div class="modal-body">
                 <form onsubmit="handleAddTransaction(event)">
                     <div class="form-group">
-                        <label for="tx-amount">Amount ($)</label>
+                        <label for="tx-amount">Amount (₹)</label>
                         <input type="number" step="0.01" min="0.01" id="tx-amount" class="select-input" required placeholder="0.00">
                     </div>
                     <div class="form-group">
@@ -1042,11 +1042,11 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="goal-target">Target Amount ($)</label>
+                            <label for="goal-target">Target Amount (₹)</label>
                             <input type="number" step="0.01" min="1" id="goal-target" class="select-input" required placeholder="1000.00">
                         </div>
                         <div class="form-group">
-                            <label for="goal-current">Current Saved ($)</label>
+                            <label for="goal-current">Current Saved (₹)</label>
                             <input type="number" step="0.01" min="0" id="goal-current" class="select-input" required placeholder="0.00">
                         </div>
                     </div>
@@ -1098,7 +1098,7 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="b-limit">Monthly Limit ($)</label>
+                        <label for="b-limit">Monthly Limit (₹)</label>
                         <input type="number" step="0.01" min="1" id="b-limit" class="select-input" required placeholder="e.g. 500.00">
                     </div>
                     <button type="submit" class="btn-primary" style="margin-top: 10px;">Save Monthly Limit</button>
@@ -1326,9 +1326,7 @@
                         <p>No matching transactions found.</p>
                     </div>`;
                 return;
-            }
-
-            container.innerHTML = "";
+             container.innerHTML = "";
             list.forEach(tx => {
                 const item = document.createElement("div");
                 item.className = "transaction-item";
@@ -1352,7 +1350,7 @@
                     </div>
                     <div class="tx-right">
                         <span class="tx-amount ${isIncome ? 'income' : 'expense'}">
-                            ${isIncome ? '+' : '-'}$${tx.amount.toFixed(2)}
+                            ${isIncome ? '+' : '-'}₹${tx.amount.toFixed(2)}
                         </span>
                         <button class="btn-delete" title="Delete" onclick="deleteTransaction(${tx.id})">
                             <i class="fa-solid fa-trash-can"></i>
@@ -1401,14 +1399,14 @@
                     item.innerHTML = `
                         <div class="budget-head">
                             <span class="budget-name">${escapeHtml(b.categoryName)}</span>
-                            <span class="budget-values">$${b.spent.toFixed(2)} of $${b.monthlyLimit.toFixed(2)}</span>
+                            <span class="budget-values">₹${b.spent.toFixed(2)} of ₹${b.monthlyLimit.toFixed(2)}</span>
                         </div>
                         <div class="progress-track">
                             <div class="progress-fill ${fillClass}" style="width: ${capPercent}%"></div>
                         </div>
                         <div class="budget-foot">
                             <span>${b.utilizationPercent.toFixed(1)}% Used</span>
-                            <span>$${Math.max(0, b.remaining).toFixed(2)} remaining</span>
+                            <span>₹${Math.max(0, b.remaining).toFixed(2)} remaining</span>
                         </div>
                     `;
                     container.appendChild(item);
@@ -1457,12 +1455,12 @@
                 if (!res.ok) throw new Error("Could not load summary");
                 const summary = await res.json();
                 
-                document.getElementById("val-income").innerText = `$${summary.totalIncome.toFixed(2)}`;
-                document.getElementById("val-expense").innerText = `$${summary.totalExpenses.toFixed(2)}`;
+                document.getElementById("val-income").innerText = `₹${summary.totalIncome.toFixed(2)}`;
+                document.getElementById("val-expense").innerText = `₹${summary.totalExpenses.toFixed(2)}`;
                 
                 const balance = summary.totalIncome - summary.totalExpenses;
                 const valBalance = document.getElementById("val-balance");
-                valBalance.innerText = `$${balance.toFixed(2)}`;
+                valBalance.innerText = `₹${balance.toFixed(2)}`;
                 valBalance.style.color = balance >= 0 ? "var(--primary)" : "var(--danger)";
                 return summary;
             } catch (err) {
@@ -1531,7 +1529,7 @@
                 data: {
                     labels: ['Income', 'Expenses'],
                     datasets: [{
-                        label: 'Amount ($)',
+                        label: 'Amount (₹)',
                         data: [totalInc, totalExp],
                         backgroundColor: ['#10b981', '#ef4444'],
                         borderRadius: 8
@@ -1549,6 +1547,7 @@
                     }
                 }
             });
+        }   });
         }
 
         async function handleAddTransaction(e) {
@@ -1719,7 +1718,7 @@
                 item.innerHTML = `
                     <div class="budget-head">
                         <span class="budget-name"><i class="fa-solid fa-flag-checkered" style="color: var(--primary); margin-right: 6px;"></i> ${escapeHtml(g.title)}</span>
-                        <span class="budget-values">$${g.current.toFixed(2)} of $${g.target.toFixed(2)}</span>
+                        <span class="budget-values">₹${g.current.toFixed(2)} of ₹${g.target.toFixed(2)}</span>
                     </div>
                     <div class="progress-track">
                         <div class="progress-fill" style="width: ${percent}%; background: var(--primary);"></div>
